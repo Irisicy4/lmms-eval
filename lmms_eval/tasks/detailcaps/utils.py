@@ -240,6 +240,10 @@ def detailcaps_4870_doc_to_visual(doc):
 
 
 def detailcaps_4870_doc_to_text(doc):
+    # Canonical prompt for CAPTURE / DetailCaps benchmark — matches the
+    # default in lmms_eval/tasks/detailcaps/_default_template_detailcaps_yaml
+    # contributed by the CAPTURE authors. Refs avg ~120 tokens, so the
+    # generation budget in the yaml (max_new_tokens=512) is set accordingly.
     return "Describe the image in detail."
 
 
