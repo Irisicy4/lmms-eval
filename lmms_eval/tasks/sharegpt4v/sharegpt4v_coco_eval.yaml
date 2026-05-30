@@ -38,7 +38,10 @@ metric_list:
     aggregation : !function utils.sharegpt4v_cider
     higher_is_better : true
 lmms_eval_specific_kwargs:
+  # Default = Share-Captioner training prompt from the ShareGPT4V paper.
+  # Override with --task_args 'lmms_eval_specific_kwargs.default.prompt=…'
+  # if you want to reproduce a different captioner setup.
   default:
-    prompt: "Describe the image in detail."
+    prompt: "Analyze the image in a comprehensive and detailed manner."
 metadata:
   - version: 0.0

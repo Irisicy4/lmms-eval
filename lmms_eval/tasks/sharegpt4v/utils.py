@@ -17,10 +17,17 @@ def sharegpt4v_doc_to_visual(doc):
     return [doc["image"].convert("RGB")]
 
 
+_SHAREGPT4V_DEFAULT_PROMPT = "Analyze the image in a comprehensive and detailed manner."
+
+
 def sharegpt4v_doc_to_text(doc, lmms_eval_specific_kwargs=None):
+    # Default prompt is the Share-Captioner training prompt from the
+    # ShareGPT4V paper (Chen et al., 2023; see ECCV 2024 supplement Appendix E
+    # "Details about Share-Captioner"). This is the prompt that reproduces the
+    # ShareGPT4V caption distribution that our references come from.
     if lmms_eval_specific_kwargs is None:
-        return "Describe the image in detail."
-    return lmms_eval_specific_kwargs.get("prompt", "Describe the image in detail.")
+        return _SHAREGPT4V_DEFAULT_PROMPT
+    return lmms_eval_specific_kwargs.get("prompt", _SHAREGPT4V_DEFAULT_PROMPT)
 
 
 def sharegpt4v_process_result(doc, result):
