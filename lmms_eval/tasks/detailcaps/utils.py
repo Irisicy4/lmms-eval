@@ -4,7 +4,10 @@ import json
 import logging
 import os
 
-from capture_metric.capture import CAPTURE
+try:
+    from capture_metric.capture import CAPTURE
+except ImportError:  # capture-metric is only required by the `detailcaps` task
+    CAPTURE = None
 from PIL import Image
 from pycocoevalcap.eval import Bleu, Cider, COCOEvalCap, Meteor, Rouge
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
@@ -196,3 +199,93 @@ def detailcaps_test_aggregation_result(results, args=None):
         json.dump(stored_results, f, indent=4)
 
     eval_logger.info(f"Your test result has been stored in {path}. Make sure you also have the val result stored to submit to the server on https://codalab.lisn.upsaclay.fr/competitions/7404#participate.")
+
+
+# ---------------------------------------------------------------------------
+# DetailCaps-4870 task (new) — uses the standard COCO caption metric stack
+# (Bleu_1/Bleu_4/METEOR/ROUGE-L/CIDEr) with all three GT references per image.
+# ---------------------------------------------------------------------------
+
+from lmms_eval.tasks.coco_cap.utils import (
+    coco_bleu1 as _coco_bleu1,
+    coco_bleu4 as _coco_bleu4,
+    coco_cider as _coco_cider,
+    coco_meteor as _coco_meteor,
+    coco_rougel as _coco_rougel,
+)
+
+DETAILCAPS_4870_METRICS = ["Bleu_4", "Bleu_1", "METEOR", "ROUGE_L", "CIDEr"]
+
+# Stable, monotonically increasing integer image_id (COCOEvalCap requires ints).
+_DETAILCAPS_4870_IMAGE_ID_MAP = {}
+
+
+def _detailcaps_4870_image_id(doc):
+    """Return a stable int image_id for a DetailCaps-4870 sample.
+
+    The dataset's `image` column is a relative path string, so we map it
+    deterministically to an int (COCOEvalCap indexes annotations by int id).
+    """
+    key = doc.get("image")
+    if key is None:
+        # Fallback: use the GPT-4O reference text as the identity key.
+        key = doc.get("GT_Caption_GPT4O", "")
+    if key not in _DETAILCAPS_4870_IMAGE_ID_MAP:
+        _DETAILCAPS_4870_IMAGE_ID_MAP[key] = len(_DETAILCAPS_4870_IMAGE_ID_MAP)
+    return _DETAILCAPS_4870_IMAGE_ID_MAP[key]
+
+
+def detailcaps_4870_doc_to_visual(doc):
+    return [Image.open(io.BytesIO(doc["binary"])).convert("RGB")]
+
+
+def detailcaps_4870_doc_to_text(doc):
+    return "Describe the image in detail."
+
+
+def detailcaps_4870_doc_to_target(doc):
+    return [
+        doc["GT_Caption_GPT4O"],
+        doc["GT_Caption_GPT4V"],
+        doc["GT_Caption_Gemini15Pro"],
+    ]
+
+
+def detailcaps_4870_process_result(doc, result):
+    """Build the COCOEvalCap-compatible per-sample record.
+
+    Each DetailCaps-4870 sample carries three GT references; we hand all
+    three to the aggregator so BLEU/METEOR/ROUGE-L/CIDEr score the
+    prediction against the full multi-reference set.
+    """
+    pred = result[0] if len(result) > 0 else ""
+    image_id = _detailcaps_4870_image_id(doc)
+    references = detailcaps_4870_doc_to_target(doc)
+
+    data_dict = {
+        "answer": references,
+        "pred": pred,
+        "image_id": image_id,
+        "id": image_id,
+    }
+    return {f"detailcaps_4870_{metric}": data_dict for metric in DETAILCAPS_4870_METRICS}
+
+
+def detailcaps_4870_bleu4(results, args=None):
+    return _coco_bleu4(results, args)
+
+
+def detailcaps_4870_bleu1(results, args=None):
+    return _coco_bleu1(results, args)
+
+
+def detailcaps_4870_meteor(results, args=None):
+    return _coco_meteor(results, args)
+
+
+def detailcaps_4870_rougel(results, args=None):
+    return _coco_rougel(results, args)
+
+
+def detailcaps_4870_cider(results, args=None):
+    return _coco_cider(results, args)
