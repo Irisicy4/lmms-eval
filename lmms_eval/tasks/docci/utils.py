@@ -18,10 +18,10 @@ def docci_doc_to_visual(doc):
 
 
 def docci_doc_to_text(doc):
-    # The dataset ships a per-row question (e.g. "Describe this image") but we
-    # keep a short, fixed prompt to stay consistent with the COCO-Karpathy style
-    # caption task and avoid drift across rows.
-    return "Describe the image briefly."
+    # Prompt from the DOCCI paper (Onoe et al., ECCV 2024) — the authors used
+    # this string when eliciting VLM captions for side-by-side evaluation
+    # against DOCCI's long human descriptions (avg ~136 words).
+    return "Generate a detailed image description with around 120 words, but you may adjust the length if you want."
 
 
 def docci_process_result(doc, result):
