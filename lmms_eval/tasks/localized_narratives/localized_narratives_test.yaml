@@ -8,7 +8,9 @@ doc_to_visual: !function utils.ln_doc_to_visual
 doc_to_text: !function utils.ln_doc_to_text
 doc_to_target: "caption"
 generation_kwargs:
-  max_new_tokens: 64
+  # LN narrations average ~36 words ≈ 50 tokens but the long tail goes much
+  # higher; 128 keeps headroom without artificially truncating valid output.
+  max_new_tokens: 128
   temperature: 0
   top_p: 1.0
   num_beams: 1

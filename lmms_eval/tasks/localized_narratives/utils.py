@@ -64,7 +64,17 @@ def ln_doc_to_visual(doc):
 
 
 def ln_doc_to_text(doc):
-    return "Describe the image briefly."
+    # Text-only adaptation of the Localized Narratives annotator instruction
+    # (Pont-Tuset et al., ECCV 2020, §3 Annotation Instructions). The voice +
+    # mouse-pointing portion is dropped since we can't supply traces; the
+    # remaining constraints — focus on concrete objects, no speculation about
+    # feelings or future events — preserve the LN narration style.
+    return (
+        "Describe what you see in the image. Focus on concrete objects "
+        "(e.g. cow, grass, person, kite, road, sky). Do not comment on things "
+        "you cannot directly see (e.g. feelings that the image evokes, or what "
+        "might happen in the future)."
+    )
 
 
 def ln_process_result(doc, result):
