@@ -5,7 +5,7 @@ task: "detailcaps_4870"
 test_split: test
 output_type: generate_until
 doc_to_visual: !function utils.detailcaps_doc_to_visual
-doc_to_text: !function utils.detailcaps_doc_to_text
+doc_to_text: !function utils.detailcaps_4870_doc_to_text
 doc_to_target: !function utils.detailcaps_doc_to_target
 generation_kwargs:
   max_new_tokens: 512
